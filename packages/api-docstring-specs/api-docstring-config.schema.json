@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://placeholder.com/schemas/api-docstring-config",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "asyncApi": { "$ref": "#/$defs/AsyncApiConfig" },
+    "files": { "$ref": "#/$defs/FileConfig" },
+    "format": {
+      "type": "string",
+      "enum": ["json", "yaml"]
+    },
+    "groups": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/GroupConfig" }
+    },
+    "openApi": { "$ref": "#/$defs/OpenApiConfig" },
+    "out": {
+      "type": "string",
+      "format": "uri-reference"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+    }
+  },
+  "required": ["version"],
+  "additionalProperties": false,
+  "$defs": {
+    "AsyncApiConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["json", "yaml"]
+        },
+        "out": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "version": {
+          "type": "string",
+          "enum": ["3.0.0", "2.6.0", "2.5.0", "2.4.0", "2.3.0", "2.2.0", "2.1.0", "2.0.0"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "FileConfig": {
+      "type": "object",
+      "properties": {
+        "include": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "exclude": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "GroupConfig": {
+      "type": "object",
+      "properties": {
+        "include": { "type": "boolean" },
+        "name": { "type": "string" },
+        "sortOrder": { "type": "integer" }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "OpenApiConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["json", "yaml"]
+        },
+        "out": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "version": {
+          "type": "string",
+          "enum": ["3.1.0", "3.0.3", "3.0.2", "3.0.1", "3.0.0", "2.0", "1.2", "1.1", "1.0"]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

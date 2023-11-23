@@ -1,0 +1,289 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://placeholder.com/schemas/api-docstring",
+  "description": "The schema of a valid api-docstring comment block after being parsed.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "globalDefines": {
+      "type": "object",
+      "patternProperties": {
+        "^.+$": {
+          "$ref": "#/$defs/Block"
+        }
+      }
+    },
+    "locals": { "$ref": "#/$defs/Local" }
+  },
+  "required": ["$schema"],
+  "additionalProperties": false,
+  "$defs": {
+    "ApiBody": {
+      "type": "object",
+      "properties": {
+        "defaultValue": { "type": "string" },
+        "description": { "type": "string" },
+        "isOptional": { "type": "boolean" },
+        "namePath": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "required": ["namePath"],
+      "additionalProperties": false
+    },
+    "ApiBinaryBody": {
+      "type": "object",
+      "properties": {
+        "description": { "type": "string" },
+        "encoding": { "type": "string" },
+        "maxSize": { "type": "integer", "minimum": 0 }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ApiDeprecated": {
+      "type": "object",
+      "properties": {
+        "reason": { "type": "string" }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ApiExampleDef": {
+      "type": "object",
+      "properties": {
+        "example": { "type": "string" },
+        "lang": { "type": "string" },
+        "title": { "type": "string" }
+      },
+      "required": ["title", "example"],
+      "additionalProperties": false
+    },
+    "ApiEnum": {
+      "type": "object",
+      "properties": {
+        "elements": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            {
+              "type": "object",
+              "patternProperties": {
+                "^.+$": { "type": "string" }
+              }
+            },
+            {
+              "type": "object",
+              "patternProperties": {
+                "^.+$": { "type": "integer" }
+              }
+            }
+          ]
+        }
+      },
+      "required": ["elements"],
+      "additionalProperties": false
+    },
+    "ApiError": {
+      "type": "object",
+      "properties": {
+        "description": { "type": "string" },
+        "group": { "type": "string" },
+        "isOptional": { "type": "boolean" },
+        "namePath": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "ApiErrorHeader": {
+      "type": "object",
+      "properties": {
+        "defaultValue": { "type": "string" },
+        "description": { "type": "string" },
+        "group": { "type": "string" },
+        "isOptional": { "type": "boolean" },
+        "name": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "ApiHeader": {
+      "type": "object",
+      "properties": {
+        "defaultValue": { "type": "string" },
+        "description": { "type": "string" },
+        "isOptional": { "type": "boolean" },
+        "name": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "ApiIgnore": {
+      "type": "object",
+      "properties": {
+        "reason": { "type": "string" }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ApiParam": {
+      "type": "object",
+      "properties": {
+        "defaultValue": { "type": "string" },
+        "description": { "type": "string" },
+        "isOptional": { "type": "boolean" },
+        "name": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "ApiPermission": {
+      "type": "object",
+      "properties": {
+        "description": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "ApiPrivate": {
+      "type": "object",
+      "properties": {
+        "reason": { "type": "string" }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ApiProto": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["rest", "event"]
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "ApiQuery": {
+      "type": "object",
+      "properties": {
+        "defaultValue": { "type": "string" },
+        "description": { "type": "string" },
+        "isOptional": { "type": "boolean" },
+        "name": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "ApiSuccess": {
+      "type": "object",
+      "properties": {
+        "description": { "type": "string" },
+        "group": { "type": "string" },
+        "isOptional": { "type": "boolean" },
+        "namePath": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "ApiSuccessHeader": {
+      "defaultValue": { "type": "string" },
+      "description": { "type": "string" },
+      "group": { "type": "string" },
+      "isOptional": { "type": "boolean" },
+      "name": { "type": "string" },
+      "type": { "type": "string" }
+    },
+    "required": ["name"],
+    "additionalProperties": false
+  },
+  "Block": {
+    "oneOf": [{ "$ref": "#/$defs/EventBlock" }, { "$ref": "#/$defs/RestBlock" }]
+  },
+  "BaseBlock": {
+    "type": "object",
+    "properties": {
+      "bodyDefs": { "type": "array", "items": { "$ref": "#/$defs/ApiBody" } },
+      "bodyExamples": { "type": "array", "items": { "$ref": "#/$defs/ApiExampleDef" } },
+      "binaryBodyDefs": { "type": "array", "items": { "$ref": "#/$defs/ApiBinaryBody" } },
+      "defineName": { "type": "string" },
+      "description": { "type": "string" },
+      "deprecated": { "$ref": "#/$defs/ApiDeprecated" },
+      "enumDefs": { "type": "array", "items": { "$ref": "#/$defs/ApiEnum" } },
+      "errorDefs": { "type": "array", "items": { "$ref": "#/$defs/ApiError" } },
+      "errorExamples": { "type": "array", "items": { "$ref": "#/$defs/ApiExampleDef" } },
+      "errorHeaderDefs": { "type": "array", "items": { "$ref": "#/$defs/ApiErrorHeader" } },
+      "errorHeaderExamples": { "type": "array", "items": { "$ref": "#/$defs/ApiExampleDef" } },
+      "groupName": { "type": "string" },
+      "ignored": { "$ref": "#/$defs/ApiPrivate" },
+      "name": { "type": "string" },
+      "paramDefs": { "type": "array", "items": { "$ref": "#/$defs/ApiParam" } },
+      "paramExamples": { "type": "array", "items": { "$ref": "#/$defs/ApiExampleDef" } },
+      "permissionDefs": { "type": "array", "items": { "$ref": "#/$defs/ApiPermission" } },
+      "private": { "$ref": "#/$defs/ApiIgnored" },
+      "proto": { "$ref": "#/$defs/ApiProto" },
+      "queryDefs": { "type": "array", "items": { "$ref": "#/$defs/ApiQuery" } },
+      "queryExamples": { "type": "array", "items": { "$ref": "#/$defs/ApiExampleDef" } },
+      "shortName": { "type": "string" },
+      "successDefs": { "type": "array", "items": { "$ref": "#/$defs/ApiSuccess" } },
+      "successExamples": { "type": "array", "items": { "$ref": "#/$defs/ApiExampleDef" } },
+      "successHeaderDefs": { "type": "array", "items": { "$ref": "#/$defs/ApiSuccessHeader" } },
+      "successHeaderExamples": { "type": "array", "items": { "$ref": "#/$defs/ApiExampleDef" } },
+      "version": {
+        "type": "string",
+        "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+      }
+    }
+  },
+  "EventBlock": {
+    "allOf": [
+      { "$ref": "#/$defs/BaseBlock" },
+      {
+        "type": "object",
+        "properties": {}
+      }
+    ],
+    "additionalProperties": false
+  },
+  "Local": {
+    "type": "object",
+    "properties": {
+      "blocks": {
+        "type": "array",
+        "items": { "$ref": "#/$defs/Block" }
+      },
+      "localDefines": {
+        "type": "object",
+        "patternProperties": {
+          "^.+$": {
+            "$ref": "#/$defs/Block"
+          }
+        }
+      }
+    },
+    "required": ["blocks", "localDefines"],
+    "additionalProperties": false
+  },
+  "RestBlock": {
+    "allOf": [
+      { "$ref": "#/$defs/BaseBlock" },
+      {
+        "type": "object",
+        "properties": {}
+      }
+    ],
+    "additionalProperties": false
+  }
+}
