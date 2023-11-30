@@ -20,6 +20,16 @@
   "required": ["$schema"],
   "additionalProperties": false,
   "$defs": {
+    "ApiBinaryBody": {
+      "type": "object",
+      "properties": {
+        "description": { "type": "string" },
+        "encoding": { "type": "string" },
+        "maxSize": { "type": "integer", "minimum": 0 }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
     "ApiBody": {
       "type": "object",
       "properties": {
@@ -30,16 +40,6 @@
         "type": { "type": "string" }
       },
       "required": ["namePath"],
-      "additionalProperties": false
-    },
-    "ApiBinaryBody": {
-      "type": "object",
-      "properties": {
-        "description": { "type": "string" },
-        "encoding": { "type": "string" },
-        "maxSize": { "type": "integer", "minimum": 0 }
-      },
-      "required": [],
       "additionalProperties": false
     },
     "ApiDeprecated": {

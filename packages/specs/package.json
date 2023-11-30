@@ -1,5 +1,5 @@
 {
-  "name": "api-docstring-specs",
+  "name": "@api-docstring/specs",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",

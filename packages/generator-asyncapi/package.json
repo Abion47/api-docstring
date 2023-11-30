@@ -1,5 +1,5 @@
 {
-  "name": "api-docstring-asyncapi",
+  "name": "@api-docstring/generator-asyncapi",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
