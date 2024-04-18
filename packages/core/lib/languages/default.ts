@@ -1,4 +1,4 @@
-import { Language } from './_types';
+import type { Language } from './_types';
 
 /**
  * C#, Go, Dart, Java, JavaScript, PHP (all DocStyle capable languages)

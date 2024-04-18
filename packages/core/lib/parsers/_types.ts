@@ -1,8 +1,9 @@
-import { Element } from '../parser';
+import type { App } from '..';
+import type { Element } from '../parser';
 
 export type FieldParser = {
   deprecated?: boolean;
-  parse: (element: Element) => FieldParserOutput;
+  parse: (app: App, element: Element) => FieldParserOutput;
 };
 
 export type FieldParserOutput = Record<string, unknown> & {

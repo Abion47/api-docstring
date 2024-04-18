@@ -1,9 +1,12 @@
-import { Element } from '../../parser';
-import { tokenizeContent, checkRequiredFields, tokensToFields } from '../../util/element_content_parser';
-import { FieldParser, FieldParserOutput } from '../_types';
+import type { App } from '../..';
+import type { Element } from '../../parser';
+import { checkRequiredFields, tokenizeContent, tokensToFields } from '../../util/element_content_parser';
+import type { FieldParser, FieldParserOutput } from '../_types';
 
-function parse(element: Element): FieldParserOutput {
+function parse(app: App, element: Element): FieldParserOutput {
   const tokens = tokenizeContent(element.content);
+  app.log.debug(tokens);
+
   if (typeof tokens === 'string') {
     element.hasError = true;
     element.error = tokens;

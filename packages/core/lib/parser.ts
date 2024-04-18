@@ -1,13 +1,13 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import iconv from 'iconv-lite';
 import _ from 'lodash';
 
-import { App } from '.';
+import type { App } from '.';
 // import ParameterError from './errors/parameter_error';
 // import ParserError from './errors/parser_error';
 import type { Language } from './languages/_types';
-import { FieldParser, FieldParserOutput } from './parsers/_types';
+import type { FieldParser, FieldParserOutput } from './parsers/_types';
 
 let app: App;
 // let filterTag: string | null = null;
@@ -232,7 +232,7 @@ export default class Parser extends Object {
 
     for (const element of block.elements) {
       if (element.name === 'apiproto') {
-        console.log(element);
+        // app.log.debug(element);
         const type = element.content.split(' ')[0].replace(/[{}]/g, '');
         if (type === 'rest' || type === 'event') {
           typedBlock.type = type;
@@ -274,11 +274,11 @@ export default class Parser extends Object {
           break;
         }
 
-        const output = parser.parse(element);
-        console.log(output);
+        const output = parser.parse(app, element);
+        // app.log.debug(output);
         const parsed = element as ParsedElement;
         parsed.parserOutput = output;
-        console.log(parsed);
+        // app.log.debug(parsed);
       }
 
       console.dir(block, { depth: 99 });

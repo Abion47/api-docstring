@@ -1,18 +1,19 @@
 // import fs from 'fs';
 // import os from 'os';
 // import path from 'path';
-import _ from 'lodash';
+// import _ from 'lodash';
 // import semver from 'semver';
 
 // import Filter from './filter';
-import Parser, { Block } from './parser';
+import Parser from './parser';
 // import Worker from './worker';
 
+import type { ArgsConfig } from './args';
+import { type Config, defaultConfig } from './conf';
 // import FileError from './errors/file_error';
 // import ParserError from './errors/parser_error';
 // import WorkerError from './errors/worker_error';
-import { Language } from './languages/_types';
-import { Config, defaultConfig } from './conf';
+import type { Language } from './languages/_types';
 
 const SPECIFICATION_VERSION = '0.0.1';
 export function getSpecificationVersion() {
@@ -37,26 +38,26 @@ export const defaultPackageInfos = {
 export type PackageInfos = typeof defaultPackageInfos;
 
 // Simple logger interace
-export const consoleLogger = {
+export const consoleLogger: Logger = {
   level: 'debug',
   debug: (...args: unknown[]) => {
     if (consoleLogger.level !== 'debug') return;
     console.log('[D]', ...args);
   },
-  verbose: function (...args: unknown[]) {
+  verbose: (...args: unknown[]) => {
     if (!['debug', 'verbose'].includes(consoleLogger.level)) return;
     console.log('[V]', ...args);
   },
-  info: function (...args: unknown[]) {
+  info: (...args: unknown[]) => {
     if (!['debug', 'verbose', 'info'].includes(consoleLogger.level)) return;
     console.log('[I]', ...args);
   },
-  warn: function (...args: unknown[]) {
+  warn: (...args: unknown[]) => {
     if (!['debug', 'verbose', 'info', 'warn'].includes(consoleLogger.level)) return;
     console.log('[W]', ...args);
   },
-  error: function (...args: unknown[]) {
-    console.log('[E]', ...args);
+  error: (...args: unknown[]) => {
+    console.error('[E]', ...args);
   },
 };
 export type Logger = {
@@ -106,24 +107,19 @@ export const defaultAppOptions: AppOptions = {
     },
     rest: {
       api: './parsers/rest/api.js',
-      apisuccess: './parsers/global/api_success.js',
-      apisuccessexample: './parsers/global/api_success_example.js',
-      apisuccessheader: './parsers/global/api_success_header.js',
-      apisuccessheaderexample: './parsers/global/api_success_header_example.js',
+      apisuccess: './parsers/rest/api_success.js',
+      apisuccessexample: './parsers/rest/api_success_example.js',
+      apisuccessheader: './parsers/rest/api_success_header.js',
+      apisuccessheaderexample: './parsers/rest/api_success_header_example.js',
     },
     event: {
       api: './parsers/event/api.js',
     },
   },
 };
+
 export type AppOptions = {
-  log: {
-    debug: (...args: unknown[]) => void;
-    verbose: (...args: unknown[]) => void;
-    info: (...args: unknown[]) => void;
-    warn: (...args: unknown[]) => void;
-    error: (...args: unknown[]) => void;
-  };
+  log: Logger;
   languages: Record<string, string | Language>;
   parsers: {
     global: Record<string, string>;
@@ -131,19 +127,25 @@ export type AppOptions = {
     event: Record<string, string>;
   };
 };
+
 export let app: App;
-export function parse(files: string[], options: { config?: Config; cwd?: string }) {
+export function parse(files: string[], options: { config?: Config; args?: ArgsConfig; cwd?: string }) {
   // TODO: Expose for customization
   const appOptions = defaultAppOptions;
 
+  // TODO: Set log level based on args.silent/vebose
+  // appOptions.log.level = options.args?.silent ? 'error' : options.args?.verbose ? 'verbose' : 'info';
+  appOptions.log.level = 'debug';
+
   app = new App(files, options.cwd ?? process.cwd(), options.config ?? defaultConfig, appOptions);
-  // console.log(app.parser.languages);
+  // app.log.debug(app.parser.languages);
 
-  const parsedFileBlocks = app.parser.parseFiles({ encoding: 'utf8' });
+  app.parser.parseFiles({ encoding: 'utf8' });
+  // const parsedFileBlocks = app.parser.parseFiles({ encoding: 'utf8' });
 
-  // console.dir(parsedFileBlocks, { depth: 99 });
-  // console.log(parsedFileNames);
-  // console.log(parsedFiles);
+  // console.dir(parsedFileBlocks, { depth: 2 });
+  // app.log.debug(parsedFileNames);
+  // app.log.debug(parsedFiles);
 }
 
 export class App {

@@ -1,9 +1,12 @@
-import { Element } from '../../parser';
+import type { App } from '../..';
+import type { Element } from '../../parser';
 import { checkRequiredFields, tokenizeContent, tokensToFields } from '../../util/element_content_parser';
-import { FieldParser, FieldParserOutput } from '../_types';
+import type { FieldParser, FieldParserOutput } from '../_types';
 
-function parse(element: Element): FieldParserOutput {
+function parse(app: App, element: Element): FieldParserOutput {
   const tokens = tokenizeContent(element.content);
+  app.log.debug(tokens);
+
   if (typeof tokens === 'string') {
     element.hasError = true;
     element.error = tokens;
@@ -29,7 +32,7 @@ function parse(element: Element): FieldParserOutput {
     return { elementType: element.name };
   }
 
-  const matches = /^([\w.]+)(\?)?(?>=([\S]+))?$/.exec(fields.name as string);
+  const matches = /^([\w.]+)(\?)?(?:=([\S]+))?$/.exec(fields.name as string);
   if (matches == null) {
     element.hasError = true;
     element.error = `Element ${element.index} could not be parsed: Name field is null or empty`;

@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-'use strict';
 //------------------------------------------------------------------------------
 // Execution
 //------------------------------------------------------------------------------
@@ -18,5 +17,5 @@
   // }
 
   // Otherwise, call the CLI.
-  process.exitCode = require('../dist/cli').execute(process.argv);
+  process.exitCode = require('../dist/cli').execute();
 })();

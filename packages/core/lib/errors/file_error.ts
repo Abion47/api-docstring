@@ -1,4 +1,4 @@
-import fpath from 'path';
+import fpath from 'node:path';
 
 export default class FileError extends Error {
   file: string;
