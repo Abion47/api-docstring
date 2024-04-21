@@ -1,0 +1,4 @@
+/**
+ * @apiProto {rest}
+ * @apiPrivate Because.
+ */

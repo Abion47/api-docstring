@@ -3,14 +3,11 @@ import path from 'node:path';
 import iconv from 'iconv-lite';
 import _ from 'lodash';
 
-import type { App } from '.';
-// import ParameterError from './errors/parameter_error';
-// import ParserError from './errors/parser_error';
+import type { App } from './app';
 import type { Language } from './languages/_types';
 import type { FieldParser, FieldParserOutput } from './parsers/_types';
 
 let app: App;
-// let filterTag: string | null = null;
 
 export default class Parser extends Object {
   languages: Record<string, Language>;

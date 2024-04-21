@@ -11,6 +11,98 @@ import {
   validateUnion,
 } from './validation';
 
+export const defaultConfig: Config = {
+  version: '0.0.1',
+  openApi: { enabled: false },
+  asyncApi: { enabled: false },
+  files: { include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'] },
+  format: 'json',
+  outDir: './api',
+  srcDir: './src',
+};
+
+export type InputConfig = {
+  asyncApi?: AsyncApiConfig;
+  files?: FilesConfig;
+  format?: 'json' | 'yaml';
+  groups?: GroupConfig[];
+  openApi?: OpenApiConfig;
+  outDir?: string;
+  srcDir?: string;
+  version: string;
+};
+
+export type InputAsyncApiConfig = {
+  enabled?: boolean;
+  format?: 'json' | 'yaml';
+  out?: string;
+  version?: string;
+};
+
+export type InputFilesConfig = {
+  include?: string[];
+  exclude?: string[];
+};
+
+export type InputGroupConfig = {
+  name: string;
+  include?: boolean;
+  sortOrder?: number;
+};
+
+export type InputOpenApiConfig = {
+  enabled?: boolean;
+  format?: 'json' | 'yaml';
+  out?: string;
+  version?: string;
+};
+
+export type Config = {
+  asyncApi: AsyncApiConfig;
+  files: FilesConfig;
+  format: 'json' | 'yaml';
+  groups?: GroupConfig[];
+  openApi: OpenApiConfig;
+  outDir: string;
+  srcDir: string;
+  version: string;
+};
+
+export type AsyncApiConfig = {
+  enabled: boolean;
+  format?: 'json' | 'yaml';
+  out?: string;
+  version?: string;
+};
+
+export type FilesConfig = {
+  include: string[];
+  exclude?: string[];
+};
+
+export type GroupConfig = {
+  name: string;
+  include?: boolean;
+  sortOrder?: number;
+};
+
+export type OpenApiConfig = {
+  enabled: boolean;
+  format?: 'json' | 'yaml';
+  out?: string;
+  version?: string;
+};
+
+export function initConfig(cwd: string) {
+  const programConfigPath = path.resolve(cwd, './api-docstring.config.json');
+  if (fs.existsSync(programConfigPath)) {
+    console.error('Cannot create config file "api-docstring.config.json: file already exists');
+    return;
+  }
+
+  fs.writeFileSync(programConfigPath, JSON.stringify(defaultConfig, null, 2));
+}
+
 export function locateDefaultConfigPath(cwd: string): string {
   const programConfigPath = path.resolve(cwd, './api-docstring.config');
   if (fs.existsSync(programConfigPath)) return programConfigPath;
@@ -18,7 +110,7 @@ export function locateDefaultConfigPath(cwd: string): string {
   const programConfigPathJson = `${programConfigPath}.json`;
   if (fs.existsSync(programConfigPathJson)) return programConfigPathJson;
 
-  const programConfigPathJs = `${programConfigPath}.json`;
+  const programConfigPathJs = `${programConfigPath}.js`;
   if (fs.existsSync(programConfigPathJs)) return programConfigPathJs;
 
   return '';
@@ -114,85 +206,3 @@ export function loadConfig(filepath?: string): Config {
 
   return config as Config;
 }
-
-export const defaultConfig: Config = {
-  version: '0.0.1',
-  openApi: { enabled: false },
-  asyncApi: { enabled: false },
-  files: { include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'] },
-  format: 'json',
-  outDir: './api',
-  srcDir: './src',
-};
-
-export type InputConfig = {
-  asyncApi?: AsyncApiConfig;
-  files?: FilesConfig;
-  format?: 'json' | 'yaml';
-  groups?: GroupConfig[];
-  openApi?: OpenApiConfig;
-  outDir?: string;
-  srcDir?: string;
-  version: string;
-};
-
-export type InputAsyncApiConfig = {
-  enabled?: boolean;
-  format?: 'json' | 'yaml';
-  out?: string;
-  version?: string;
-};
-
-export type InputFilesConfig = {
-  include?: string[];
-  exclude?: string[];
-};
-
-export type InputGroupConfig = {
-  name: string;
-  include?: boolean;
-  sortOrder?: number;
-};
-
-export type InputOpenApiConfig = {
-  enabled?: boolean;
-  format?: 'json' | 'yaml';
-  out?: string;
-  version?: string;
-};
-
-export type Config = {
-  asyncApi: AsyncApiConfig;
-  files: FilesConfig;
-  format: 'json' | 'yaml';
-  groups?: GroupConfig[];
-  openApi: OpenApiConfig;
-  outDir: string;
-  srcDir: string;
-  version: string;
-};
-
-export type AsyncApiConfig = {
-  enabled: boolean;
-  format?: 'json' | 'yaml';
-  out?: string;
-  version?: string;
-};
-
-export type FilesConfig = {
-  include: string[];
-  exclude?: string[];
-};
-
-export type GroupConfig = {
-  name: string;
-  include?: boolean;
-  sortOrder?: number;
-};
-
-export type OpenApiConfig = {
-  enabled: boolean;
-  format?: 'json' | 'yaml';
-  out?: string;
-  version?: string;
-};

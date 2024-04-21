@@ -1,0 +1,3 @@
+/**
+ * @apiProto {rest} REST
+ */

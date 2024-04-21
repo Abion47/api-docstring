@@ -1,0 +1,4 @@
+/**
+ * @apiProto {rest}
+ * @apiIgnore Because.
+ */

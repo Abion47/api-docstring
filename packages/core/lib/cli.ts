@@ -1,11 +1,9 @@
-// import { parse } from '.';
-// import fs from 'fs';
 import path from 'node:path';
 
 import { globSync } from 'glob';
 import { parse } from '.';
 import { getHelp, getVersion, parseArgs } from './args';
-import { loadConfig, locateDefaultConfigPath } from './conf';
+import { initConfig, loadConfig, locateDefaultConfigPath } from './conf';
 
 export function execute() {
   const argsConfig = parseArgs();
@@ -17,6 +15,11 @@ export function execute() {
 
   if (argsConfig.version) {
     console.log(getVersion());
+    return;
+  }
+
+  if (argsConfig.init) {
+    initConfig(process.cwd());
     return;
   }
 
