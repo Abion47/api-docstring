@@ -121,6 +121,7 @@ export type OpenApiOperationObject = {
 
 export type OpenApi = {
   $schema: string;
+  openapi: '3.0.0';
   info: {
     version: string;
     title: string;
@@ -195,6 +196,7 @@ function formatValue(type: string, value: string) {
 export default function generate(config: Config, definition: ApiDefinition): OpenApi {
   const openApi: OpenApi = {
     $schema: 'https://spec.openapis.org/oas/3.0/schema/2021-09-28',
+    openapi: '3.0.0',
     info: definition.info,
     paths: {},
   };

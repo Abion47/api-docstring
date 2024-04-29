@@ -16,8 +16,6 @@ export type ApiDefinition = {
   files: ApiFile[];
 };
 
-export const latestOpenApiVersion = '3.0.0';
-
 export function analyzeBlocks(config: Config, fileBlocks: Record<string, Block[]>) {
   const analysisResult = {
     openApi: undefined as ApiDefinition | undefined,
@@ -28,7 +26,7 @@ export function analyzeBlocks(config: Config, fileBlocks: Record<string, Block[]
     const definition: ApiDefinition = {
       info: {
         title: config.openApi.title,
-        version: config.openApi.version ?? latestOpenApiVersion,
+        version: config.version,
       },
       globalDefines: {},
       files: [],
