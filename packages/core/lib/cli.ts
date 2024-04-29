@@ -27,7 +27,7 @@ export function execute() {
   const programConfigPath = locateDefaultConfigPath(process.cwd());
   const programConfig = loadConfig(programConfigPath);
 
-  // app.log.debug(programConfig);
+  // Globals.app.log.debug(programConfig);
 
   const programRoot = path.resolve(process.cwd(), programConfig.srcDir);
   const inputFiles = globSync(programConfig.files.include, {
@@ -35,7 +35,10 @@ export function execute() {
     ignore: programConfig.files.exclude,
   }).map(file => path.resolve(programRoot, file));
 
-  // app.log.debug(inputFiles);
+  // Globals.app.log.debug(inputFiles);
 
+  // console.log(programRoot);
+  // console.log(programConfig.files.include);
+  // console.log(inputFiles);
   parse(inputFiles, { cwd: process.cwd(), config: programConfig, args: argsConfig });
 }

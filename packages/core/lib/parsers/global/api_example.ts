@@ -1,11 +1,11 @@
-import type { App } from '../..';
+import Globals from '../../globals';
 import type { Element } from '../../parser';
 import { checkRequiredFields, tokenizeContent, tokensToFields } from '../../util/element_content_parser';
 import type { FieldParser, FieldParserOutput } from '../_types';
 
-function parse(app: App, element: Element): FieldParserOutput {
+function parse(element: Element): FieldParserOutput {
   const tokens = tokenizeContent(element.content);
-  app.log.debug(tokens);
+  Globals.app.log.debug(tokens);
 
   if (typeof tokens === 'string') {
     element.hasError = true;
@@ -24,7 +24,7 @@ function parse(app: App, element: Element): FieldParserOutput {
     return { elementType: element.name };
   }
 
-  const error = checkRequiredFields(fields, ['lang']);
+  const error = checkRequiredFields(fields, ['title']);
 
   if (error) {
     element.hasError = true;
@@ -32,6 +32,11 @@ function parse(app: App, element: Element): FieldParserOutput {
   }
 
   const example = element.body;
+
+  if (!example) {
+    element.hasError = true;
+    element.error = `Element ${element.index} could not be parsed: Body is required`;
+  }
 
   return {
     elementType: element.name,

@@ -126,9 +126,10 @@ export function loadConfig(filepath?: string): Config {
   config.version = validateString('version', providedConfig.version);
   config.srcDir = validateString('srcDir', providedConfig.srcDir, true) ?? defaultConfig.srcDir;
   config.outDir = validateString('outDir', providedConfig.outDir, true) ?? defaultConfig.outDir;
-  if (validateString('format', providedConfig.format, true) != null)
+  if (validateString('format', providedConfig.format, true) != null) {
     config.format =
       validateUnion<'json' | 'yaml'>('format', providedConfig.format, ['json', 'yaml']) ?? defaultConfig.format;
+  }
 
   // asyncApi
   if (providedConfig.asyncApi != null && validateObject(providedConfig.asyncApi, true)) {

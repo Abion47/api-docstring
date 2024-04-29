@@ -1,0 +1,3 @@
+/**
+ * @apiDefineGlobal define
+ */

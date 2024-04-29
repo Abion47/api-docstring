@@ -16,10 +16,10 @@
 //     app = _app;
 //     this.workers = {};
 
-//     const workers = Object.keys(app.workers);
+//     const workers = Object.keys(Globals.app.workers);
 //     for (const key of workers) {
-//       const filename = app.workers[key];
-//       app.log.debug(`load worker: ${key}, ${filename}`);
+//       const filename = Globals.app.workers[key];
+//       Globals.app.log.debug(`load worker: ${key}, ${filename}`);
 //       this.addWorker(key, require(filename));
 //     }
 //   }

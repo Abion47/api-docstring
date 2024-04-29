@@ -1,0 +1,4 @@
+/**
+ * @apiProto {rest}
+ * @apiUse Something
+ */

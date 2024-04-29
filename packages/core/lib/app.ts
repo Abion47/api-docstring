@@ -1,4 +1,3 @@
-import Parser from './parser';
 import type { Logger } from './types';
 import type { Language } from './languages/_types';
 import type { Config } from './conf';
@@ -91,14 +90,11 @@ export class App {
   programConfig: Config;
   options: AppOptions;
 
-  parser: Parser;
-
   constructor(files: string[], cwd: string, programConfig: Config, options: AppOptions) {
     this.files = files;
     this.cwd = cwd;
     this.programConfig = programConfig;
     this.options = options;
-    this.parser = new Parser(this);
   }
 
   get log() {

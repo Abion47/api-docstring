@@ -3,11 +3,9 @@ import path from 'node:path';
 import iconv from 'iconv-lite';
 import _ from 'lodash';
 
-import type { App } from './app';
 import type { Language } from './languages/_types';
 import type { FieldParser, FieldParserOutput } from './parsers/_types';
-
-let app: App;
+import Globals from './globals';
 
 export default class Parser extends Object {
   languages: Record<string, Language>;
@@ -20,10 +18,8 @@ export default class Parser extends Object {
   parsedFiles: unknown[];
   countDeprecated: Record<string, unknown>;
 
-  constructor(_app: App) {
+  constructor() {
     super();
-
-    app = _app;
 
     this.languages = {};
     this.parsers = {
@@ -35,14 +31,14 @@ export default class Parser extends Object {
     this.parsedFiles = [];
     this.countDeprecated = {};
 
-    const languages = Object.entries(app.options.languages);
+    const languages = Object.entries(Globals.app.options.languages);
     for (const [key, language] of languages) {
       if (_.isObject(language)) {
-        app.log.debug('inject parser language:', language);
+        Globals.app.log.debug('inject parser language:', language);
         this.addLanguage(key, language);
       } else {
         const filename = language;
-        app.log.debug('load parser language:', key, ',', filename);
+        Globals.app.log.debug('load parser language:', key, ',', filename);
         this.addLanguage(key, require(filename));
       }
     }
@@ -51,24 +47,24 @@ export default class Parser extends Object {
       const parsers = Object.entries(parserOpts);
       for (const [key, parser] of parsers) {
         if (_.isObject(parser)) {
-          app.log.debug('inject parser:', parser);
+          Globals.app.log.debug('inject parser:', parser);
           this.addParser(target, key, parser);
         } else {
           const filename = parser;
-          app.log.debug('load parser:', key, ',', filename);
+          Globals.app.log.debug('load parser:', key, ',', filename);
           this.addParser(target, key, require(filename));
         }
       }
     };
 
-    if (app.options.parsers.global) {
-      registerParsers('global', app.options.parsers.global);
+    if (Globals.app.options.parsers.global) {
+      registerParsers('global', Globals.app.options.parsers.global);
     }
-    if (app.options.parsers.rest) {
-      registerParsers('rest', app.options.parsers.rest);
+    if (Globals.app.options.parsers.rest) {
+      registerParsers('rest', Globals.app.options.parsers.rest);
     }
-    if (app.options.parsers.event) {
-      registerParsers('event', app.options.parsers.event);
+    if (Globals.app.options.parsers.event) {
+      registerParsers('event', Globals.app.options.parsers.event);
     }
   }
 
@@ -83,12 +79,12 @@ export default class Parser extends Object {
   parseFiles(options: ParserOptions) {
     const parsedFiles: Record<string, Block[]> = {};
 
-    for (const file of app.files) {
+    for (const file of Globals.app.files) {
       const filename = path.basename(file);
       const parsedFileBlocks = this.parseFile(file, options.encoding);
 
       if (parsedFileBlocks) {
-        app.log.verbose(`parse file: ${filename}`);
+        Globals.app.log.verbose(`parse file: ${filename}`);
         parsedFiles[file] = parsedFileBlocks;
       }
     }
@@ -102,7 +98,7 @@ export default class Parser extends Object {
       encoding = 'utf8';
     }
 
-    app.log.debug(`inspect file: ${filename}`);
+    Globals.app.log.debug(`inspect file: ${filename}`);
 
     const parserState: ParserState = {
       filename,
@@ -119,20 +115,20 @@ export default class Parser extends Object {
 
   parseSource(fileContents: Buffer, encoding: string, state: ParserState) {
     state.src = iconv.decode(fileContents, encoding);
-    app.log.debug(`size: ${state.src.length}`);
+    Globals.app.log.debug(`size: ${state.src.length}`);
 
     state.src = state.src.replace(/\r\n/g, '\n');
 
     state.blocks = this.findBlocks(state);
     if (state.blocks.length === 0) return;
 
-    app.log.debug(`count blocks: ${state.blocks.length}`);
+    Globals.app.log.debug(`count blocks: ${state.blocks.length}`);
 
     let elementCount = 0;
     for (let i = 0; i < state.blocks.length; i++) {
       const block = state.blocks[i];
       block.elements = this.findElements(block, state);
-      app.log.debug(`count elements in block ${i}: ${block.elements.length}`);
+      Globals.app.log.debug(`count elements in block ${i}: ${block.elements.length}`);
       elementCount += block.elements.length;
     }
     if (elementCount === 0) return;
@@ -216,9 +212,9 @@ export default class Parser extends Object {
 
     let joined = lines.map(line => line.trim()).join('\n');
 
-    joined = joined.replace(/\n\n/g, '\uffff');
-    joined = joined.replace(/\n/g, ' ');
-    joined = joined.replace(/\uffff/g, '\n');
+    // joined = joined.replace(/\n\n/g, '\uffff');
+    // joined = joined.replace(/\n/g, ' ');
+    // joined = joined.replace(/\uffff/g, '\n');
     joined = joined.trim();
 
     return joined;
@@ -229,23 +225,29 @@ export default class Parser extends Object {
 
     for (const element of block.elements) {
       if (element.name === 'apiproto') {
-        // app.log.debug(element);
         const type = element.content.split(' ')[0].replace(/[{}]/g, '');
+
         if (type === 'rest' || type === 'event') {
           typedBlock.type = type;
         } else {
           block.hasError = true;
           block.error = `Block of unsupported proto type: ${type}`;
-          app.log.error(`Error parsing block: ${block.error}`);
+          Globals.app.log.error(`Error parsing block: ${block.error}`);
         }
+
         return;
+      }
+      if (element.name === 'apidefine' || element.name === 'apidefineglobal') {
+        if (typedBlock.type == null) {
+          typedBlock.type = 'global';
+        }
       }
     }
 
     if (typedBlock.type == null) {
       block.hasError = true;
       block.error = 'Block does not specify a proto type';
-      app.log.error(`Error parsing block: ${block.error}`);
+      Globals.app.log.error(`Error parsing block: ${block.error}`);
     }
   }
 
@@ -267,15 +269,15 @@ export default class Parser extends Object {
           block.error = 'Element error';
           element.error = `Parser cannot be found for element ${typedBlock.type}.${element.name}`;
           element.hasError = true;
-          app.log.error(`Error parsing element contents: ${element.error}`);
+          Globals.app.log.error(`Error parsing element contents: ${element.error}`);
           break;
         }
 
-        const output = parser.parse(app, element);
-        // app.log.debug(output);
+        const output = parser.parse(element);
+        // Globals.app.log.debug(output);
         const parsed = element as ParsedElement;
         parsed.parserOutput = output;
-        // app.log.debug(parsed);
+        // Globals.app.log.debug(parsed);
       }
 
       console.dir(block, { depth: 99 });

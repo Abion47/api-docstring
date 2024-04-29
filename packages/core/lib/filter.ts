@@ -11,14 +11,14 @@
 //     super();
 //     app = _app;
 
-//     const filters = Object.keys(app.filters);
+//     const filters = Object.keys(Globals.app.filters);
 //     for (const filter of filters) {
-//       if (_.isObject(app.filters[filter])) {
-//         app.log.debug(`inject filter: ${filter}`);
-//         this.addFilter(filter, app.filters[filter]);
+//       if (_.isObject(Globals.app.filters[filter])) {
+//         Globals.app.log.debug(`inject filter: ${filter}`);
+//         this.addFilter(filter, Globals.app.filters[filter]);
 //       } else {
-//         const filename = app.filters[filter];
-//         app.log.debug(`load filter: ${filter}, ${filename}`);
+//         const filename = Globals.app.filters[filter];
+//         Globals.app.log.debug(`load filter: ${filter}, ${filename}`);
 //         this.addFilter(filter, require(filename));
 //       }
 //     }

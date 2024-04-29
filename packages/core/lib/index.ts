@@ -1,6 +1,7 @@
 import type { ArgsConfig } from './args';
 import { type Config, defaultConfig } from './conf';
-import { App, defaultAppOptions } from './app';
+import { defaultAppOptions } from './app';
+import Globals from './globals';
 
 const SPECIFICATION_VERSION = '0.0.1';
 export function getSpecificationVersion() {
@@ -24,22 +25,27 @@ export const defaultPackageInfos = {
 };
 export type PackageInfos = typeof defaultPackageInfos;
 
-export let app: App;
 export function parse(files: string[], options: { config?: Config; args?: ArgsConfig; cwd?: string }) {
   // TODO: Expose for customization
   const appOptions = defaultAppOptions;
 
   // TODO: Set log level based on args.silent/vebose
   // appOptions.log.level = options.args?.silent ? 'error' : options.args?.verbose ? 'verbose' : 'info';
-  appOptions.log.level = 'debug';
+  appOptions.log.level = 'verbose';
 
-  app = new App(files, options.cwd ?? process.cwd(), options.config ?? defaultConfig, appOptions);
-  // app.log.debug(app.parser.languages);
+  Globals.initialize({
+    files,
+    cwd: options.cwd ?? process.cwd(),
+    programConfig: options.config ?? defaultConfig,
+    options: appOptions,
+  });
 
-  app.parser.parseFiles({ encoding: 'utf8' });
-  // const parsedFileBlocks = app.parser.parseFiles({ encoding: 'utf8' });
+  // Globals.app.log.debug(Globals.app.parser.languages);
+
+  Globals.parser.parseFiles({ encoding: 'utf8' });
+  // const parsedFileBlocks = Globals.app.parser.parseFiles({ encoding: 'utf8' });
 
   // console.dir(parsedFileBlocks, { depth: 2 });
-  // app.log.debug(parsedFileNames);
-  // app.log.debug(parsedFiles);
+  // Globals.app.log.debug(parsedFileNames);
+  // Globals.app.log.debug(parsedFiles);
 }

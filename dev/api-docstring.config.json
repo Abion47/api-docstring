@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "openApi": {
+    "enabled": true
+  },
+  "files": {
+    "include": [
+      "singles/api-private.js"
+    ]
+  },
+  "format": "json",
+  "outDir": "./api",
+  "srcDir": "./docs"
+}

@@ -1,20 +1,16 @@
 import { describe, expect, test, beforeAll } from '@jest/globals';
 import { loadFixture } from '../utility/io';
-
-import Parser from '../../lib/parser';
-import { App } from '../../lib/app';
-
-let parser: Parser;
+import { defaultConfig } from '../../lib/conf';
+import { defaultAppOptions } from '../../lib/app';
+import Globals from '../../lib/globals';
 
 beforeAll(() => {
-  
-  parser = new Parser();
+  Globals.initialize({ files: [], cwd: process.cwd(), programConfig: defaultConfig, options: defaultAppOptions });
 });
 
 describe('Parsing', () => {
   test('api-binary-body.js', () => {
     const jsFile = loadFixture('api-binary-body.js');
-    const result = 
   });
 
   test('api-description.js', () => {
