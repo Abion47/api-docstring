@@ -95,7 +95,7 @@ export function tokensToFields(
     plain?: string;
   }
 ) {
-  const fields: Record<string, unknown> = {};
+  const fields: Record<string, string> = {};
 
   for (const token of tokens) {
     if (token.curly) {

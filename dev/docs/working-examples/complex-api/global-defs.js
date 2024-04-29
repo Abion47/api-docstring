@@ -1,6 +1,7 @@
 /**
+ * @apiProto {rest}
  * @apiDefineGlobal GlobalDefine
- * 
- * @apiHeader {String} Accept=GET
+ *
+ * @apiHeader Accept=GET
  * The HTTP methods accepted by this endpoint.
  */

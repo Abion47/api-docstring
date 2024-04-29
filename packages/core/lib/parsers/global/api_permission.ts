@@ -24,7 +24,7 @@ function parse(element: Element): FieldParserOutput {
     return { elementType: element.name };
   }
 
-  const error = checkRequiredFields(fields, ['name']);
+  const error = checkRequiredFields(fields, ['type', 'name']);
 
   if (error) {
     element.hasError = true;

@@ -7,7 +7,18 @@ function parse(element: Element): FieldParserOutput {
   const tokens = tokenizeContent(element.content);
   Globals.app.log.debug(tokens);
 
-  return { elementType: element.name };
+  const version = element.content;
+
+  if (!version) {
+    element.hasError = true;
+    element.error = `Element ${element.index} could not be parsed: Version is required`;
+    return { elementType: element.name };
+  }
+
+  return {
+    elementType: element.name,
+    version,
+  };
 }
 
 const parser: FieldParser = {

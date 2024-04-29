@@ -1,11 +1,22 @@
 {
   "version": "0.0.1",
   "openApi": {
-    "enabled": true
+    "enabled": true,
+    "title": "OpenAPI Title",
+    "security": {
+      "apiKey": {
+        "name": "Api-Key",
+        "in": "header"
+      },
+      "http": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
   },
   "files": {
     "include": [
-      "singles/api-private.js"
+      "working-examples/complex-api/*.js"
     ]
   },
   "format": "json",

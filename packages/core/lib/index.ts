@@ -2,6 +2,8 @@ import type { ArgsConfig } from './args';
 import { type Config, defaultConfig } from './conf';
 import { defaultAppOptions } from './app';
 import Globals from './globals';
+import { analyzeBlocks } from './analyzer';
+import { generateOpenApi } from './generators/openapi';
 
 const SPECIFICATION_VERSION = '0.0.1';
 export function getSpecificationVersion() {
@@ -29,6 +31,8 @@ export function parse(files: string[], options: { config?: Config; args?: ArgsCo
   // TODO: Expose for customization
   const appOptions = defaultAppOptions;
 
+  const config = options.config ?? defaultConfig;
+
   // TODO: Set log level based on args.silent/vebose
   // appOptions.log.level = options.args?.silent ? 'error' : options.args?.verbose ? 'verbose' : 'info';
   appOptions.log.level = 'verbose';
@@ -36,16 +40,24 @@ export function parse(files: string[], options: { config?: Config; args?: ArgsCo
   Globals.initialize({
     files,
     cwd: options.cwd ?? process.cwd(),
-    programConfig: options.config ?? defaultConfig,
+    programConfig: config,
     options: appOptions,
   });
 
   // Globals.app.log.debug(Globals.app.parser.languages);
 
-  Globals.parser.parseFiles({ encoding: 'utf8' });
-  // const parsedFileBlocks = Globals.app.parser.parseFiles({ encoding: 'utf8' });
+  // Globals.parser.parseFiles({ encoding: 'utf8' });
 
-  // console.dir(parsedFileBlocks, { depth: 2 });
+  const parsedFileBlocks = Globals.parser.parseFiles({ encoding: 'utf8' });
+
+  // console.dir(parsedFileBlocks, { depth: 99 });
+
+  const apiDef = analyzeBlocks(config, parsedFileBlocks);
+
+  if (apiDef.openApi && config.openApi.enabled) {
+    generateOpenApi(config, apiDef.openApi, config.outDir);
+  }
+
   // Globals.app.log.debug(parsedFileNames);
   // Globals.app.log.debug(parsedFiles);
 }

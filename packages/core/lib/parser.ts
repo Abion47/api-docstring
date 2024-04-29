@@ -280,7 +280,7 @@ export default class Parser extends Object {
         // Globals.app.log.debug(parsed);
       }
 
-      console.dir(block, { depth: 99 });
+      // console.dir(block, { depth: 99 });
     }
   }
 }

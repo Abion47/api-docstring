@@ -14,7 +14,6 @@ function parse(element: Element): FieldParserOutput {
   }
 
   const fields = tokensToFields(tokens, {
-    curly: 'type',
     plain: 'name',
   });
 

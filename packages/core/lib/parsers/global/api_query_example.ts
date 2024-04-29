@@ -1,13 +1,9 @@
-import Globals from '../../globals';
 import type { Element } from '../../parser';
-import { tokenizeContent } from '../../util/element_content_parser';
 import type { FieldParser, FieldParserOutput } from '../_types';
+import exampleParser from './api_example';
 
 function parse(element: Element): FieldParserOutput {
-  const tokens = tokenizeContent(element.content);
-  Globals.app.log.debug(tokens);
-
-  return { elementType: element.name };
+  return exampleParser.parse(element);
 }
 
 const parser: FieldParser = {

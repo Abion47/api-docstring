@@ -15,6 +15,7 @@ export const defaultConfig: Config = {
   version: '0.0.1',
   openApi: { enabled: false },
   asyncApi: { enabled: false },
+  private: false,
   files: { include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'] },
   format: 'json',
   outDir: './api',
@@ -22,11 +23,12 @@ export const defaultConfig: Config = {
 };
 
 export type InputConfig = {
-  asyncApi?: AsyncApiConfig;
   files?: FilesConfig;
   format?: 'json' | 'yaml';
   groups?: GroupConfig[];
-  openApi?: OpenApiConfig;
+  asyncApi?: AsyncApiConfig | AsyncApiConfigDisabled;
+  openApi?: OpenApiConfig | OpenApiConfigDisabled;
+  private?: boolean;
   outDir?: string;
   srcDir?: string;
   version: string;
@@ -50,26 +52,37 @@ export type InputGroupConfig = {
   sortOrder?: number;
 };
 
-export type InputOpenApiConfig = {
-  enabled?: boolean;
-  format?: 'json' | 'yaml';
-  out?: string;
-  version?: string;
-};
-
 export type Config = {
-  asyncApi: AsyncApiConfig;
   files: FilesConfig;
   format: 'json' | 'yaml';
   groups?: GroupConfig[];
-  openApi: OpenApiConfig;
+  openApi: OpenApiConfig | OpenApiConfigDisabled;
+  asyncApi: AsyncApiConfig | AsyncApiConfigDisabled;
+  private: boolean;
   outDir: string;
   srcDir: string;
   version: string;
 };
 
+export type OpenApiConfigDisabled = {
+  enabled: false;
+};
+
+export type OpenApiConfig = {
+  enabled: true;
+  title: string;
+  format?: 'json' | 'yaml';
+  out?: string;
+  version?: string;
+};
+
+export type AsyncApiConfigDisabled = {
+  enabled: false;
+};
+
 export type AsyncApiConfig = {
-  enabled: boolean;
+  enabled: true;
+  title: string;
   format?: 'json' | 'yaml';
   out?: string;
   version?: string;
@@ -84,13 +97,6 @@ export type GroupConfig = {
   name: string;
   include?: boolean;
   sortOrder?: number;
-};
-
-export type OpenApiConfig = {
-  enabled: boolean;
-  format?: 'json' | 'yaml';
-  out?: string;
-  version?: string;
 };
 
 export function initConfig(cwd: string) {
@@ -121,8 +127,9 @@ export function loadConfig(filepath?: string): Config {
 
   const providedConfig = require(filepath);
 
-  const config: Partial<Config> = { ...defaultConfig };
+  const config: Partial<Config> = {};
 
+  config.private = validateBool('private', providedConfig.private, true) ?? defaultConfig.private;
   config.version = validateString('version', providedConfig.version);
   config.srcDir = validateString('srcDir', providedConfig.srcDir, true) ?? defaultConfig.srcDir;
   config.outDir = validateString('outDir', providedConfig.outDir, true) ?? defaultConfig.outDir;
@@ -132,39 +139,42 @@ export function loadConfig(filepath?: string): Config {
   }
 
   // asyncApi
-  if (providedConfig.asyncApi != null && validateObject(providedConfig.asyncApi, true)) {
-    // biome-ignore lint/style/noNonNullAssertion: Constantly defined to be non-null
-    const defaultAsyncApi = defaultConfig.asyncApi!;
-    const providedAsyncApi = providedConfig.asyncApi;
-    const asyncApi: Partial<AsyncApiConfig> = { ...defaultAsyncApi };
+  if (providedConfig.asyncApi != null && validateObject('asyncApi', providedConfig.asyncApi)) {
+    const providedAsyncApi = providedConfig.asyncApi as AsyncApiConfig | AsyncApiConfigDisabled;
 
-    asyncApi.enabled = validateBool('asyncApi.enabled', providedAsyncApi.enabled);
-    if (validateString('asyncApi.format', providedAsyncApi.format, true) != null)
-      config.format =
-        validateUnion<'json' | 'yaml'>('asyncApi.format', providedAsyncApi.format, ['json', 'yaml']) ??
-        defaultAsyncApi.format;
-    asyncApi.version = validateString('asyncApi.version', providedAsyncApi.version) ?? defaultAsyncApi.version;
-    asyncApi.out = validateString('asyncApi.out', providedAsyncApi.version) ?? defaultAsyncApi.out;
+    if (providedAsyncApi.enabled) {
+      const asyncApi: Partial<AsyncApiConfig> = { enabled: true };
 
-    config.asyncApi = asyncApi as AsyncApiConfig;
+      asyncApi.title = validateString('asyncApi.title', providedAsyncApi.title);
+      asyncApi.format = validateUnion<'json' | 'yaml'>(
+        'asyncApi.format',
+        providedAsyncApi.format,
+        ['json', 'yaml'],
+        true
+      );
+      asyncApi.version = validateString('asyncApi.version', providedAsyncApi.version, true);
+      asyncApi.out = validateString('asyncApi.out', providedAsyncApi.out, true);
+
+      config.asyncApi = asyncApi as AsyncApiConfig;
+    } else {
+      config.asyncApi = providedAsyncApi;
+    }
   }
 
   // openApi
-  if (providedConfig.asyncApi != null && validateObject(providedConfig.asyncApi, true)) {
-    // biome-ignore lint/style/noNonNullAssertion: Constantly defined to be non-null
-    const defaultOpenApi = defaultConfig.openApi!;
-    const providedOpenApi = providedConfig.openApi;
-    const openApi: Partial<AsyncApiConfig> = { ...defaultOpenApi };
+  if (providedConfig.openApi != null && validateObject('openApi', providedConfig.openApi)) {
+    const providedOpenApi = providedConfig.openApi as OpenApiConfig | OpenApiConfigDisabled;
 
-    openApi.enabled = validateBool('openApi.enabled', providedOpenApi.enabled);
-    if (validateString('openApi.format', providedOpenApi.format, true) != null)
-      config.format =
-        validateUnion<'json' | 'yaml'>('openApi.format', providedOpenApi.format, ['json', 'yaml']) ??
-        defaultOpenApi.format;
-    openApi.version = validateString('openApi.version', providedOpenApi.version) ?? defaultOpenApi.version;
-    openApi.out = validateString('openApi.out', providedOpenApi.version) ?? defaultOpenApi.out;
+    if (providedOpenApi.enabled) {
+      const openApi: Partial<OpenApiConfig> = { enabled: true };
 
-    config.openApi = openApi as OpenApiConfig;
+      openApi.title = validateString('openApi.title', providedOpenApi.title);
+      openApi.format = validateUnion<'json' | 'yaml'>('openApi.format', providedOpenApi.format, ['json', 'yaml'], true);
+      openApi.version = validateString('openApi.version', providedOpenApi.version, true);
+      openApi.out = validateString('openApi.out', providedOpenApi.out, true);
+
+      config.openApi = openApi as OpenApiConfig;
+    }
   }
 
   // files

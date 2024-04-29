@@ -29,6 +29,7 @@ function parse(element: Element): FieldParserOutput {
   if (error) {
     element.hasError = true;
     element.error = `Element ${element.index} could not be parsed: ${error}`;
+    return { elementType: element.name };
   }
 
   const example = element.body;
@@ -36,6 +37,7 @@ function parse(element: Element): FieldParserOutput {
   if (!example) {
     element.hasError = true;
     element.error = `Element ${element.index} could not be parsed: Body is required`;
+    return { elementType: element.name };
   }
 
   return {

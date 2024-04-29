@@ -99,8 +99,11 @@ export function validateObject(name: string, field: unknown, nullable = false): 
   throw new ConfigError(`Field ${name} must be an object. Found: ${field}`);
 }
 
-export function validateUnion<T>(name: string, field: unknown, values: T[]): T {
+export function validateUnion<T>(name: string, field: unknown, values: T[]): T;
+export function validateUnion<T>(name: string, field: unknown, values: T[], nullable: boolean): T | undefined;
+export function validateUnion<T>(name: string, field: unknown, values: T[], nullable = false): T | undefined {
   if (field == null) {
+    if (nullable === true) return undefined;
     throw new ConfigError(`Field ${name} must not be null.`);
   }
   for (const value of values) {
