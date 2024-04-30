@@ -44,6 +44,7 @@ export type OpenApiSchemaFormat =
   | 'password';
 
 export type OpenApiSchemaObject = {
+  [key: `x-${string}`]: unknown;
   type: string;
   enum?: (string | number)[];
   maxLength?: number;
@@ -768,6 +769,7 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
           let parentSchema = types[parserOutput.typeName];
           if (!parentSchema) {
             parentSchema = {
+              'x-type': parserOutput.typeName,
               type: 'object',
               properties: {},
               required: [],
