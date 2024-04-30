@@ -74,3 +74,19 @@
  * @apiSuccess {String} message=OK
  * OK Response
  */
+
+/**
+ * @apiProto {rest}
+ * @api {get} /users/get-user-alt
+ * @apiName Alternate Get User
+ * @apiShortName AltGetUser
+ *
+ * @apiUse DefaultHeaders
+ * @apiUse CustomType
+ *
+ * @apiBody {uuid} id
+ *    The user UUID
+ *
+ * @apiSuccess {User} user
+ *    The User
+ */

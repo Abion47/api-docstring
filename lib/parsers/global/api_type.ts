@@ -14,9 +14,9 @@ function parse(element: Element): FieldParserOutput {
   }
 
   const fields = tokensToFields(tokens, {
-    parenth: 'group',
-    curly: 'type',
-    plain: 'name',
+    parenth: 'typeName',
+    curly: 'fieldType',
+    plain: 'fieldName',
   });
 
   if (typeof fields === 'string') {
@@ -25,7 +25,7 @@ function parse(element: Element): FieldParserOutput {
     return { elementType: element.name };
   }
 
-  const error = checkRequiredFields(fields, ['name']);
+  const error = checkRequiredFields(fields, ['typeName', 'fieldType', 'fieldName']);
 
   if (error) {
     element.hasError = true;
@@ -33,7 +33,7 @@ function parse(element: Element): FieldParserOutput {
     return { elementType: element.name };
   }
 
-  const matches = /^([\w\[\].]+)(\?)?(?:=([^\n]+))?$/.exec(fields.name as string);
+  const matches = /^([\w\[\].]+)(\?)?(?:=([^\n]+))?$/.exec(fields.fieldName as string);
   if (matches == null) {
     element.hasError = true;
     element.error = `Element ${element.index} could not be parsed: Name field is null or empty`;
@@ -56,12 +56,12 @@ function parse(element: Element): FieldParserOutput {
 
   return {
     elementType: element.name,
-    group: fields.group,
-    type: fields.type,
-    name: root,
-    inner: accessors,
-    optional,
-    defaultValue,
+    typeName: fields.typeName,
+    fieldType: fields.fieldType,
+    fieldName: root,
+    fieldInner: accessors,
+    fieldOptional: optional,
+    fieldDefaultValue: defaultValue,
     description,
   };
 }

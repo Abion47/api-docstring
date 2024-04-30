@@ -1,7 +1,0 @@
-{
-  "$schema": "file:///Users/andrewackerman/Projects/mystuff/node/api-docstring/packages/api-docstring-specs/specs/v0.1.schema.json",
-  "blocks": {
-    "rest": [],
-    "event": []
-  }
-}

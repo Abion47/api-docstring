@@ -1,6 +1,6 @@
 {
   "name": "api-docstring",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "",
   "author": "Andrew Ackerman <andrew.ackie@gmail.com>",
   "license": "MIT",
@@ -9,10 +9,11 @@
     "api-docstring": "bin/docstring"
   },
   "scripts": {
-    "postinstall": "npm run build",
-    "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > lib/args/version.ts",
+    "prebuild": "npm run build:version",
     "build": "tsc --project tsconfig.json",
-    "build:live": "nodemon --watch \"lib/**\" --ext \"ts,json\" --exec \"npm run build\"",
+    "postinstall": "npm run build",
+    "build:version": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > lib/args/version.ts",
+    "build:live": "nodemon --watch \"lib/**\" --ignore \"lib/args/version.ts\" --ext \"ts,json\" --exec \"npm run build\"",
     "biome:check": "biome check ."
   },
   "dependencies": {

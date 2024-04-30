@@ -21,13 +21,14 @@ import type {
   ApiQuery,
   ApiQueryExample,
   ApiShortName,
+  ApiType,
   ApiUse,
   OpenApiPath,
   OpenApiSuccess,
   OpenApiSuccessExample,
   OpenApiSuccessHeader,
   OpenApiSuccessHeaderExample,
-} from '../../../parsers/global/model';
+} from '../../../parsers/model';
 
 export type OpenApiSchemaFormat =
   | 'int32'
@@ -70,7 +71,7 @@ export type OpenApiOperationObject = {
   operationId?: string;
   summary?: string;
   description?: string;
-  security?: Record<string, string[]>;
+  // security?: Record<string, string[]>[];
   deprecated?: boolean;
   parameters?: OpenApiParamObject[];
   requestBody?: {
@@ -144,6 +145,7 @@ function convertType(type: string) {
       return 'number';
     case 'uuid':
     case 'datetime':
+    case 'binary':
     case 'string':
       return 'string';
     case 'array':
@@ -157,6 +159,8 @@ function convertType(type: string) {
 
 function detectFormat(type: string): OpenApiSchemaFormat | undefined {
   switch (type.toLowerCase()) {
+    case 'binary':
+      return 'binary';
     case 'integer':
       return 'int32';
     case 'uuid':
@@ -207,11 +211,98 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
     defines: Record<string, Block>,
     block: Block
   ) {
+    const types: Record<string, OpenApiSchemaObject> = {};
     const enums: Record<string, { type: string; values: (string | number)[] }> = {};
     const elementsToParse: ParsedElement[] = [];
 
+    function buildSchemaObject(typeName: string, description: string | undefined, defaultValue: string | undefined) {
+      const type = convertType(typeName);
+      let schemaObj: OpenApiSchemaObject;
+
+      if (type === 'unknown') {
+        const customType = types[typeName];
+        if (customType != null) {
+          schemaObj = {
+            ...customType,
+            description,
+          };
+        } else if (typeName in enums) {
+          const enumEntry = enums[typeName];
+          schemaObj = {
+            type: enumEntry.type,
+            enum: enumEntry.values,
+            description,
+          };
+        } else {
+          Globals.app.log.error(`Unrecognized OpenAPI type: ${type}`);
+          schemaObj = {
+            type,
+            description,
+          };
+        }
+      } else {
+        schemaObj = {
+          type,
+          description,
+        };
+      }
+
+      if (type === 'array') {
+        const itemTypeName = typeName.substring(0, typeName.length - 2);
+        const itemType = convertType(itemTypeName);
+        let itemSchemaObj: OpenApiSchemaObject;
+
+        if (itemType === 'unknown') {
+          const customType = types[itemTypeName];
+          if (customType != null) {
+            itemSchemaObj = {
+              ...customType,
+            };
+          } else if (itemTypeName in enums) {
+            const enumEntry = enums[itemTypeName];
+            itemSchemaObj = {
+              type: enumEntry.type,
+              enum: enumEntry.values,
+            };
+          } else {
+            Globals.app.log.error(`Unrecognized OpenAPI type: ${itemType}`);
+            itemSchemaObj = {
+              type: itemType,
+            };
+          }
+        } else {
+          itemSchemaObj = {
+            type: itemType,
+          };
+        }
+
+        const itemsFormat = detectFormat(itemType);
+        if (itemsFormat) {
+          itemSchemaObj.format = itemsFormat;
+        }
+
+        schemaObj.items = itemSchemaObj;
+      }
+
+      if (defaultValue) {
+        schemaObj.default = formatValue(typeName, defaultValue);
+      }
+
+      const format = detectFormat(typeName);
+      if (format) {
+        schemaObj.format = format;
+      }
+
+      return schemaObj;
+    }
+
     // Initial Pass
     for (const element of block.elements as ParsedElement[]) {
+      if (element.hasError) {
+        Globals.app.log.error('Element could not be parsed:', `[${element.name}]`, element.error);
+        continue;
+      }
+
       switch (element.name) {
         case 'apienum': {
           const parserOutput = element.parserOutput as ApiEnum;
@@ -310,9 +401,10 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
         case 'api': {
           const parserOutput = element.parserOutput as OpenApiPath;
           method = parserOutput.method.toLowerCase();
-          path = parserOutput.path;
+          path = parserOutput.path.replace(/:[\w\d_-]/g, match => `{${match.substring(1)}}`);
           break;
         }
+
         case 'apibinarybody': {
           const parserOutput = element.parserOutput as ApiBinaryBody;
           if (requestBodySchema) {
@@ -354,13 +446,45 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
           let propertyName = parserOutput.name;
           let parentFound = true;
           if (parserOutput.inner) {
-            const keys = parserOutput.inner;
+            const keys = [parserOutput.name, ...parserOutput.inner];
             for (let i = 0; i < keys.length - 1; i++) {
               const key = keys[i];
+
+              if (key === '[]') {
+                if (parentSchema.type !== 'array') {
+                  parentFound = false;
+                  Globals.app.log.error(
+                    `An @apiSuccess defined an inner array but the parent property has not been defined or isn't an array: ${
+                      parserOutput.name
+                    }.${parserOutput.inner.join('.')}`
+                  );
+                  break;
+                }
+
+                if (parentSchema.items == null) {
+                  Globals.app.log.error(
+                    `An @apiBody defined an inner array but the parent property is malformed: ${
+                      parserOutput.name
+                    }.${parserOutput.inner.join('.')}`
+                  );
+                  break;
+                }
+
+                parentSchema.items.properties ??= {};
+                parentSchema = parentSchema.items;
+
+                if (i + 1 >= keys.length - 1) {
+                  propertyName = keys[i + 1];
+                  break;
+                }
+
+                continue;
+              }
+
               if (parentSchema.type !== 'object') {
                 parentFound = false;
                 Globals.app.log.error(
-                  `An @apiSuccess defined an inner property but the parent property has not been defined or isn't an object: ${
+                  `An @apiBody defined an inner property but the parent property isn't an object: ${
                     parserOutput.name
                   }.${parserOutput.inner.join('.')}`
                 );
@@ -368,17 +492,13 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
               }
 
               if (!parentSchema.properties) {
-                if (i + 1 >= keys.length) {
-                  parentSchema.properties = {};
-                } else {
-                  parentFound = false;
-                  Globals.app.log.error(
-                    `An @apiSuccess defined an inner property but the parent property has not been defined or isn't an object: ${
-                      parserOutput.name
-                    }.${parserOutput.inner.join('.')}`
-                  );
-                  break;
-                }
+                parentFound = false;
+                Globals.app.log.error(
+                  `An @apiSuccess defined an inner property but the parent property has not been defined: ${
+                    parserOutput.name
+                  }.${parserOutput.inner.join('.')}`
+                );
+                break;
               }
 
               parentSchema = parentSchema.properties[key];
@@ -388,48 +508,69 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
 
           if (!parentFound) break;
 
-          const type = convertType(parserOutput.type);
-          const format = detectFormat(parserOutput.type);
-          let itemType: string | undefined;
-          if (type === 'array') {
-            itemType = convertType(parserOutput.type.substring(0, parserOutput.type.length - 2));
-          }
+          const propertySchema = buildSchemaObject(
+            parserOutput.type,
+            parserOutput.description,
+            parserOutput.defaultValue
+          );
+          // const type = convertType(parserOutput.type);
+          // if (type === 'unknown') {
+          //   const customType = types[parserOutput.type];
+          //   if (customType != null) {
+          //     propertySchema = {
+          //       ...customType,
+          //       description: parserOutput.description,
+          //     };
+          //   } else {
+          //     Globals.app.log.error(`Unrecognized OpenAPI type: ${type}`);
+          //     propertySchema = {
+          //       type,
+          //       description: parserOutput.description,
+          //     };
+          //   }
+          // } else {
+          //   propertySchema = {
+          //     type,
+          //     description: parserOutput.description,
+          //   };
+          // }
 
-          const propertySchema: OpenApiSchemaObject = {
-            type,
-            description: parserOutput.description,
-          };
+          // const format = detectFormat(parserOutput.type);
+          // let itemType: string | undefined;
+          // if (type === 'array') {
+          //   itemType = convertType(parserOutput.type.substring(0, parserOutput.type.length - 2));
+          // }
 
-          if (itemType) {
-            const itemsFormat = detectFormat(itemType);
-            propertySchema.items = {
-              type: itemType,
-              format: itemsFormat,
-            };
-          }
+          // if (itemType) {
+          //   const itemsFormat = detectFormat(itemType);
+          //   propertySchema.items = {
+          //     type: itemType,
+          //     format: itemsFormat,
+          //   };
+          // }
 
-          if (parserOutput.defaultValue) {
-            propertySchema.default = formatValue(parserOutput.type, parserOutput.defaultValue);
-          }
+          // if (parserOutput.defaultValue) {
+          //   propertySchema.default = formatValue(parserOutput.type, parserOutput.defaultValue);
+          // }
 
-          if (parserOutput.type in enums) {
-            const enumEntry = enums[parserOutput.type];
-            propertySchema.type = enumEntry.type;
-            propertySchema.enum = enumEntry.values;
-          } else if (format) {
-            propertySchema.format = format;
-          }
+          // if (parserOutput.type in enums) {
+          //   const enumEntry = enums[parserOutput.type];
+          //   propertySchema.type = enumEntry.type;
+          //   propertySchema.enum = enumEntry.values;
+          // } else if (format) {
+          //   propertySchema.format = format;
+          // }
 
           if (!parserOutput.optional) {
             parentSchema.required?.push(propertyName);
           }
 
-          if (!parentSchema.properties) {
-            console.error('This shouldnt be possible');
-            break;
-          }
-
+          parentSchema.properties ??= {};
           parentSchema.properties[propertyName] = propertySchema;
+          break;
+        }
+
+        case 'apicomment': {
           break;
         }
 
@@ -561,9 +702,8 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
 
         case 'apipermission': {
           const parserOutput = element.parserOutput as ApiPermission;
-          operation.security ??= {};
-          operation.security[parserOutput.name] ??= [];
-          operation.security[parserOutput.name].push(parserOutput.type);
+          operation['x-flows'] ??= [];
+          (operation['x-flows'] as string[]).push(parserOutput.name);
           break;
         }
 
@@ -619,6 +759,99 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
         case 'apishortname': {
           const parserOutput = element.parserOutput as ApiShortName;
           operation.operationId = parserOutput.name;
+          break;
+        }
+
+        case 'apitype': {
+          const parserOutput = element.parserOutput as ApiType;
+
+          let parentSchema = types[parserOutput.typeName];
+          if (!parentSchema) {
+            parentSchema = {
+              type: 'object',
+              properties: {},
+              required: [],
+            };
+            types[parserOutput.typeName] = parentSchema;
+          }
+
+          let propertyName = parserOutput.fieldName;
+          let parentFound = true;
+          if (parserOutput.fieldInner) {
+            const keys = [parserOutput.fieldName, ...parserOutput.fieldInner];
+            for (let i = 0; i < keys.length - 1; i++) {
+              const key = keys[i];
+
+              if (key === '[]') {
+                if (parentSchema.type !== 'array') {
+                  parentFound = false;
+                  Globals.app.log.error(
+                    `An @apiSuccess defined an inner array but the parent property has not been defined or isn't an array: ${
+                      parserOutput.name
+                    }.${parserOutput.fieldInner.join('.')}`
+                  );
+                  break;
+                }
+
+                if (parentSchema.items == null) {
+                  Globals.app.log.error(
+                    `An @apiBody defined an inner array but the parent property is malformed: ${
+                      parserOutput.name
+                    }.${parserOutput.fieldInner.join('.')}`
+                  );
+                  break;
+                }
+
+                parentSchema.items.properties ??= {};
+                parentSchema = parentSchema.items;
+
+                if (i + 1 >= keys.length - 1) {
+                  propertyName = keys[i + 1];
+                  break;
+                }
+
+                continue;
+              }
+
+              if (parentSchema.type !== 'object') {
+                parentFound = false;
+                Globals.app.log.error(
+                  `An @apiBody defined an inner property but the parent property isn't an object: ${
+                    parserOutput.name
+                  }.${parserOutput.fieldInner.join('.')}`
+                );
+                break;
+              }
+
+              if (!parentSchema.properties) {
+                parentFound = false;
+                Globals.app.log.error(
+                  `An @apiSuccess defined an inner property but the parent property has not been defined: ${
+                    parserOutput.name
+                  }.${parserOutput.fieldInner.join('.')}`
+                );
+                break;
+              }
+
+              parentSchema = parentSchema.properties[key];
+              propertyName = keys[i + 1];
+            }
+          }
+
+          if (!parentFound) break;
+
+          const propertySchema = buildSchemaObject(
+            parserOutput.fieldType,
+            parserOutput.description,
+            parserOutput.fieldDefaultValue
+          );
+
+          if (!parserOutput.fieldOptional) {
+            parentSchema.required?.push(propertyName);
+          }
+
+          parentSchema.properties ??= {};
+          parentSchema.properties[propertyName] = propertySchema;
           break;
         }
 
@@ -685,13 +918,45 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
           let propertyName = parserOutput.name;
           let parentFound = true;
           if (parserOutput.inner) {
-            const keys = parserOutput.inner;
+            const keys = [parserOutput.name, ...parserOutput.inner];
             for (let i = 0; i < keys.length - 1; i++) {
               const key = keys[i];
+
+              if (key === '[]') {
+                if (parentSchema.type !== 'array') {
+                  parentFound = false;
+                  Globals.app.log.error(
+                    `An @apiSuccess defined an inner array but the parent property has not been defined or isn't an array: ${
+                      parserOutput.name
+                    }.${parserOutput.inner.join('.')}`
+                  );
+                  break;
+                }
+
+                if (parentSchema.items == null) {
+                  Globals.app.log.error(
+                    `An @apiSuccess defined an inner array but the parent property is malformed: ${
+                      parserOutput.name
+                    }.${parserOutput.inner.join('.')}`
+                  );
+                  break;
+                }
+
+                parentSchema.items.properties ??= {};
+                parentSchema = parentSchema.items;
+
+                if (i + 1 >= keys.length - 1) {
+                  propertyName = keys[i + 1];
+                  break;
+                }
+
+                continue;
+              }
+
               if (parentSchema.type !== 'object') {
                 parentFound = false;
                 Globals.app.log.error(
-                  `An @apiSuccess defined an inner property but the parent property has not been defined or isn't an object: ${
+                  `An @apiSuccess defined an inner property but the parent property isn't an object: ${
                     parserOutput.name
                   }.${parserOutput.inner.join('.')}`
                 );
@@ -699,17 +964,13 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
               }
 
               if (!parentSchema.properties) {
-                if (i + 1 >= keys.length) {
-                  parentSchema.properties = {};
-                } else {
-                  parentFound = false;
-                  Globals.app.log.error(
-                    `An @apiSuccess defined an inner property but the parent property has not been defined or isn't an object: ${
-                      parserOutput.name
-                    }.${parserOutput.inner.join('.')}`
-                  );
-                  break;
-                }
+                parentFound = false;
+                Globals.app.log.error(
+                  `An @apiSuccess defined an inner property but the parent property has not been defined: ${
+                    parserOutput.name
+                  }.${parserOutput.inner.join('.')}`
+                );
+                break;
               }
 
               parentSchema = parentSchema.properties[key];
@@ -719,48 +980,52 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
 
           if (!parentFound) break;
 
-          const type = convertType(parserOutput.type);
-          const format = detectFormat(parserOutput.type);
-          let itemType: string | undefined;
-          if (type === 'array') {
-            itemType = convertType(parserOutput.type.substring(0, parserOutput.type.length - 2));
-          }
+          const propertySchema = buildSchemaObject(
+            parserOutput.type,
+            parserOutput.description,
+            parserOutput.defaultValue
+          );
 
-          const propertySchema: OpenApiSchemaObject = {
-            type,
-            description: parserOutput.description,
-          };
+          // const type = convertType(parserOutput.type);
+          // const format = detectFormat(parserOutput.type);
+          // let itemType: string | undefined;
+          // if (type === 'array') {
+          //   itemType = convertType(parserOutput.type.substring(0, parserOutput.type.length - 2));
+          // }
 
-          if (itemType) {
-            const itemsFormat = detectFormat(itemType);
-            propertySchema.items = {
-              type: itemType,
-              format: itemsFormat,
-            };
-          }
+          // const propertySchema: OpenApiSchemaObject = {
+          //   type,
+          //   description: parserOutput.description,
+          // };
 
-          if (parserOutput.defaultValue) {
-            propertySchema.default = formatValue(parserOutput.type, parserOutput.defaultValue);
-          }
+          // if (itemType) {
+          //   const itemsFormat = detectFormat(itemType);
+          //   propertySchema.items = {
+          //     type: itemType,
+          //     format: itemsFormat,
+          //   };
+          // }
 
-          if (parserOutput.type in enums) {
-            const enumEntry = enums[parserOutput.type];
-            propertySchema.type = enumEntry.type;
-            propertySchema.enum = enumEntry.values;
-          } else if (format) {
-            propertySchema.format = format;
-          }
+          // if (parserOutput.defaultValue) {
+          //   propertySchema.default = formatValue(parserOutput.type, parserOutput.defaultValue);
+          // }
+
+          // if (parserOutput.type in enums) {
+          //   const enumEntry = enums[parserOutput.type];
+          //   propertySchema.type = enumEntry.type;
+          //   propertySchema.enum = enumEntry.values;
+          // } else if (format) {
+          //   propertySchema.format = format;
+          // }
+
+          parentSchema.properties ??= {};
+          parentSchema.properties[propertyName] = propertySchema;
 
           if (!parserOutput.optional) {
-            parentSchema.required?.push(propertyName);
+            parentSchema.required ??= [];
+            parentSchema.required.push(propertyName);
           }
 
-          if (!parentSchema.properties) {
-            console.error('This shouldnt be possible');
-            break;
-          }
-
-          parentSchema.properties[propertyName] = propertySchema;
           break;
         }
 
@@ -816,6 +1081,8 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
   }
 
   for (const file of definition.files) {
+    Globals.app.log.verbose(`[OpenAPI]: Process file ${file.filename}`);
+
     for (const block of file.blocks) {
       const operation: OpenApiOperationObject = {};
 
@@ -829,7 +1096,7 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
         operation['x-example'] = apiExample;
       }
 
-      if (method !== 'get' && Object.keys(requestBodySchema).length > 0) {
+      if (method !== 'get' && requestBodySchema != null && Object.keys(requestBodySchema).length > 0) {
         if (requestBodySchema.format === 'binary') {
           operation.requestBody = {
             content: {

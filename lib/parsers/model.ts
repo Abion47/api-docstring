@@ -1,4 +1,4 @@
-import type { FieldParserOutput } from '../_types';
+import type { FieldParserOutput } from './_types';
 
 export type ApiBinaryBody = FieldParserOutput & {
   encoding?: string;
@@ -117,6 +117,15 @@ export type ApiQuery = FieldParserOutput & {
 
 export type ApiShortName = FieldParserOutput & {
   name: string;
+};
+
+export type ApiType = FieldParserOutput & {
+  typeName: string;
+  fieldType: string;
+  fieldName: string;
+  fieldInner?: string[];
+  fieldOptional: boolean;
+  fieldDefaultValue?: string;
 };
 
 export type ApiUse = FieldParserOutput & {
