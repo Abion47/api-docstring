@@ -402,7 +402,6 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
 
           if (itemType) {
             const itemsFormat = detectFormat(itemType);
-            console.log(itemType, itemsFormat);
             propertySchema.items = {
               type: itemType,
               format: itemsFormat,
@@ -734,7 +733,6 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
 
           if (itemType) {
             const itemsFormat = detectFormat(itemType);
-            console.log(itemType, itemsFormat);
             propertySchema.items = {
               type: itemType,
               format: itemsFormat,

@@ -5,6 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  '@api-docstring/core':
-    specifier: link:../packages/core
-    version: link:../packages/core
+  api-docstring:
+    specifier: link:..
+    version: link:..

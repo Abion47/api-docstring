@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@api-docstring/core": "link:../packages/core"
+    "api-docstring": "link:.."
   }
 }
