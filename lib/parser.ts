@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import iconv from 'iconv-lite';
-import _ from 'lodash';
 
 import type { Language } from './languages/_types';
 import type { FieldParser, FieldParserOutput } from './parsers/_types';
@@ -33,7 +32,7 @@ export default class Parser extends Object {
 
     const languages = Object.entries(Globals.app.options.languages);
     for (const [key, language] of languages) {
-      if (_.isObject(language)) {
+      if (typeof language === 'object') {
         Globals.app.log.debug('inject parser language:', language);
         this.addLanguage(key, language);
       } else {
@@ -46,7 +45,7 @@ export default class Parser extends Object {
     const registerParsers = (target: 'global' | 'rest' | 'event', parserOpts: Record<string, string>) => {
       const parsers = Object.entries(parserOpts);
       for (const [key, parser] of parsers) {
-        if (_.isObject(parser)) {
+        if (typeof parser === 'object') {
           Globals.app.log.debug('inject parser:', parser);
           this.addParser(target, key, parser);
         } else {
