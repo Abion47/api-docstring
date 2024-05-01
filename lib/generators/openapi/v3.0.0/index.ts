@@ -402,7 +402,7 @@ export default function generate(config: Config, definition: ApiDefinition): Ope
         case 'api': {
           const parserOutput = element.parserOutput as OpenApiPath;
           method = parserOutput.method.toLowerCase();
-          path = parserOutput.path.replace(/:[\w\d_-]/g, match => `{${match.substring(1)}}`);
+          path = parserOutput.path.replace(/:[\w\d_-]+/g, match => `{${match.substring(1)}}`);
           break;
         }
 
