@@ -4,6 +4,8 @@
  *
  * @apiHeader Accept=GET
  *    The HTTP methods accepted by this endpoint.
+ * @apiHeaderExample Accept
+ *    { "Accept": "GET" }
  */
 
 /**
