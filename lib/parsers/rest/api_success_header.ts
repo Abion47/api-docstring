@@ -1,6 +1,7 @@
 import Globals from '../../globals';
 import type { Element } from '../../parser';
 import { checkRequiredFields, tokenizeContent, tokensToFields } from '../../util/element_content_parser';
+import { concatNewlines } from '../../util/misc';
 import type { FieldParser, FieldParserOutput } from '../_types';
 
 function parse(element: Element): FieldParserOutput {
@@ -43,7 +44,7 @@ function parse(element: Element): FieldParserOutput {
   const optional = (matches.length >= 3 ? matches[2] : undefined) === '?';
   const defaultValue = matches.length >= 4 ? matches[3] : undefined;
 
-  const description = element.body;
+  const description = concatNewlines(element.body);
 
   return {
     elementType: element.name,

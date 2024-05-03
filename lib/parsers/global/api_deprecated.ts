@@ -1,6 +1,7 @@
 import Globals from '../../globals';
 import type { Element } from '../../parser';
 import { tokenizeContent, tokensToFields } from '../../util/element_content_parser';
+import { concatNewlines } from '../../util/misc';
 import type { FieldParser, FieldParserOutput } from '../_types';
 
 function parse(element: Element): FieldParserOutput {
@@ -23,7 +24,7 @@ function parse(element: Element): FieldParserOutput {
     return { elementType: element.name };
   }
 
-  const description = element.body;
+  const description = concatNewlines(element.body);
 
   return {
     elementType: element.name,
